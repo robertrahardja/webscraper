@@ -10,7 +10,7 @@ fetch(url)
   .then(async (response) => {
     const linksArr = []
     data = await response.text()
-
+    //test
     const $ = cheerio.load(data, { xmlMode: true })
 
     $('loc').each((i, el) => {
