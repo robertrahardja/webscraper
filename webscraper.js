@@ -3,6 +3,10 @@ const cheerio = require('cheerio')
 const fs = require('fs')
 const writeStream = fs.createWriteStream('sites.csv')
 const url = 'https://wallpapers.com/sitemap.xml'
+const perf = require('execution-time')()
+
+//at beginning of your code to calculate execution time
+perf.start()
 
 function timeout(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -10,7 +14,7 @@ function timeout(ms) {
 
 ;(async () => {
   //write header
-  writeStream.write(`status, sites, statusCode\n`)
+  writeStream.write(`sites, statusCode\n`)
 
   //get page and load into cheerio
   const result = await fetch(url)
@@ -27,7 +31,7 @@ function timeout(ms) {
 
   let targets = []
 
-  //put links in xml into an array
+  //put html links from xmlArr into targets array
   //xmlArrP is an array of promise
   const xmlArrP = xmlArr.map(async (url) => {
     //get page and load into cheerio
@@ -56,11 +60,18 @@ function timeout(ms) {
     // fetch array of target html
     const targetArrP = tempArr.map(async (url) => {
       // await timeout(3000)
-      const result = await fetch(url)
+      const result = await fetch(url).catch((err) => {
+        console.log(err)
+        writeStream.write(`${url}, ${result.status}\n`)
+      })
       writeStream.write(`${url}, ${result.status}\n`)
     })
 
     await Promise.all(targetArrP).catch((err) => console.log(err))
-    timeout(5000)
+    timeout(3000)
   }
+
+  //at end of your code
+  const results = perf.stop()
+  console.log(results.time) // in milliseconds
 })()
