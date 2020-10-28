@@ -44,11 +44,23 @@ function timeout(ms) {
 
   await Promise.all(xmlArrP)
 
-  // fetch array of target html
-  const targetArrP = targets.map(async (url) => {
-    const result = await fetch(url)
-    writeStream.write(`${url}, ${result.status}\n`)
-  })
+  //slice targets into chunks, increasing i in chunk
+  var i,
+    j,
+    tempArr,
+    chunk = 10
+  for (i = 0, j = targets.length; i < j; i += chunk) {
+    //slice doesn't change original array
+    tempArr = targets.slice(i, i + chunk)
 
-  await Promise.all(targetArrP)
+    // fetch array of target html
+    const targetArrP = tempArr.map(async (url) => {
+      // await timeout(3000)
+      const result = await fetch(url)
+      writeStream.write(`${url}, ${result.status}\n`)
+    })
+
+    await Promise.all(targetArrP).catch((err) => console.log(err))
+    timeout(5000)
+  }
 })()
