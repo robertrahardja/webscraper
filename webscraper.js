@@ -53,21 +53,24 @@ function timeout(ms) {
     j,
     tempArr,
     chunk = 10
-  for (i = 0, j = targets.length; i < j; i += chunk) {
+  // for (i = 0, j = targets.length; i < j; i += chunk) {
+    for (i = 0, j = 100; i < j; i += chunk) {
+
     //slice doesn't change original array
     tempArr = targets.slice(i, i + chunk)
 
     // fetch array of target html
     const targetArrP = tempArr.map(async (url) => {
-      // await timeout(3000)
       const result = await fetch(url).catch((err) => {
-        console.log(err)
-        writeStream.write(`${url}, ${result.status}\n`)
+        //Write any errors to csv and console.log, then move on
+        writeStream.write(`${err.message}\n`)
       })
       writeStream.write(`${url}, ${result.status}\n`)
     })
 
-    await Promise.all(targetArrP).catch((err) => console.log(err))
+    await Promise.all(targetArrP).catch((err) => console.log(err.message))
+
+    //wait 3 seconds for next chunk
     timeout(3000)
   }
 
