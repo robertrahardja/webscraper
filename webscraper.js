@@ -24,11 +24,15 @@ fetch(url)
     return linksArr
   })
   .then((urls) => {
+    function timeout(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+  }
     urls.forEach(async (url) => {
+      const timeOut = await timeout(3000);
       response = await fetch(url)
       data = await response.text()
       const $ = cheerio.load(data, { xmlMode: true })
-      $('loc').each((i, el) => {
+      $('loc').each(async(i, el) => {
         const link = $(el).text()
         writeStream.write(`${link}, ${response.status}\n`)
       })
