@@ -3,47 +3,52 @@ const cheerio = require('cheerio')
 const fs = require('fs')
 const writeStream = fs.createWriteStream('sites.csv')
 const url = 'https://wallpapers.com/sitemap.xml'
-// Write Headers
-writeStream.write(`sites, statusCode\n`)
 
-console.time('test');
-fetch(url)
-  .then(async (response) => {
-    const linksArr = []
-    data = await response.text()
+function timeout(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+;(async () => {
+  //write header
+  writeStream.write(`status, sites, statusCode\n`)
+
+  //get page and load into cheerio
+  const result = await fetch(url)
+  const data = await result.text()
+  const $ = cheerio.load(data, { xmlMode: true })
+
+  const xmlArr = []
+
+  //get each link into targets
+  $('sitemap loc').each((i, el) => {
+    const link = $(el).text()
+    xmlArr.push(link)
+  })
+
+  let targets = []
+
+  //put links in xml into an array
+  //xmlArrP is an array of promise
+  const xmlArrP = xmlArr.map(async (url) => {
+    //get page and load into cheerio
+    const result = await fetch(url)
+    const data = await result.text()
     const $ = cheerio.load(data, { xmlMode: true })
-    $('loc').each((i, el) => {
+
+    //get each link into targets
+    $('url loc').each((i, el) => {
       const link = $(el).text()
-
-      linksArr.push(link)
-
-      // Write To CSV
-      // writeStream.write(`${link}, ${response.status}\n`)
-    })
-
-    return linksArr
-  })
-  .then((urls) => {
-    function timeout(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-  }
-    urls.forEach(async (url) => {
-      const timeOut = await timeout(3000);
-      response = await fetch(url)
-      data = await response.text()
-      const $ = cheerio.load(data, { xmlMode: true })
-      $('loc').each(async(i, el) => {
-        const link = $(el).text()
-        writeStream.write(`${link}, ${response.status}\n`)
-      })
+      targets.push(link)
     })
   })
-  .then(() => {
-    const used = process.memoryUsage().heapUsed / 1024 / 1024
-    console.log(
-      `The script uses approximately ${Math.round(used * 100) / 100} MB`
-    )
-    console.timeEnd('test'); 
+
+  await Promise.all(xmlArrP)
+
+  // fetch array of target html
+  const targetArrP = targets.map(async (url) => {
+    const result = await fetch(url)
+    writeStream.write(`${url}, ${result.status}\n`)
   })
-  .catch((err) => console.log(err))
-  
+
+  await Promise.all(targetArrP)
+})()
