@@ -19,6 +19,7 @@
   "homepage": "https://github.com/robertrahardja/webscraper#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
+    "compare-urls": "^2.0.0",
     "execution-time": "^1.4.1",
     "fetch": "^1.1.0",
     "node-fetch": "^2.6.1"
