@@ -1,11 +1,11 @@
 module.exports = function arrayEquals() {
-  
   //compare two arrays
   // Warn if overriding existing method
   if (Array.prototype.equals)
-    console.warn(
-      "Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code."
-    )
+    // console.warn(
+    //   "Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code."
+    // )
+    return true
   // attach the .equals method to Array's prototype to call it on any array
   Array.prototype.equals = function (array) {
     // if the other array is a falsy value, return
