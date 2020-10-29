@@ -26,4 +26,5 @@ module.exports = function populatingArray($, arr) {
   $(links).each(function (i, link) {
     arr.push($(link).attr('alt'))
   })
+  return arr
 }

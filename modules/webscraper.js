@@ -8,16 +8,16 @@ const timeOut = require('../utils/timeoutPromise.js')
 const getPage = require('./getPage.js')
 
 module.exports = async function webScraper(url){ 
-// ;(async (url) => {
   //at beginning of your code to calculate execution time
   perf.start()
+
   //write header
   writeStream.write(`sites, statusCode\n`)
 
   //get main url
   $ = await getPage(url).catch((err) => {
     //   //Write any errors to csv then move on
-    console.log(`first ${err.message}\n`)
+    console.log(`first url error: ${err.message}\n`)
   })
 
   const xmlArr = []
@@ -45,6 +45,8 @@ module.exports = async function webScraper(url){
       targets.push(link)
       outputArr.push(link)
     })
+
+    await timeOut
   })
 
   await Promise.all(xmlArrP)
@@ -102,7 +104,7 @@ module.exports = async function webScraper(url){
       writeStream.write(`${url}, ${result.status}\n`)
     })
 
-    await Promise.all(secondTargetArrP).catch((err) => console.log(`second promise ${err.message}`))
+    await Promise.all(secondTargetArrP).catch((err) => console.log(`second url promise all failed: ${err.message}`))
 
     //wait 3 seconds for next chunk
     await timeOut
