@@ -1,3 +1,3 @@
-module.export = function timeout(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
+module.export = async function timeOut() {
+  return new Promise((resolve) => setTimeout(resolve, 3000))
+}

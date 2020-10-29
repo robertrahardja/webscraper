@@ -2,24 +2,23 @@ const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 const fs = require('fs')
 const writeStream = fs.createWriteStream('sites.csv')
-const url = 'https://wallpapers.com/sitemap.xml'
+// const url = 'https://wallpapers.com/sitemap.xml'
 const perf = require('execution-time')()
-const timeout = require('./utils/timeoutPromise.js')
+const timeOut = require('../utils/timeoutPromise.js')
+const getPage = require('./getPage.js')
 
-
-(async () => {
+module.exports = async function webScraper(url){ 
+// ;(async (url) => {
   //at beginning of your code to calculate execution time
   perf.start()
   //write header
   writeStream.write(`sites, statusCode\n`)
 
-  //get page and load into cheerio
-  const result = await fetch(url).catch((err) => {
-    //Write any errors to csv and console.log, then move on
-    writeStream.write(`${err.message}\n`)
+  //get main url
+  $ = await getPage(url).catch((err) => {
+    //   //Write any errors to csv then move on
+    console.log(`first ${err.message}\n`)
   })
-  const data = await result.text()
-  const $ = cheerio.load(data, { xmlMode: true })
 
   const xmlArr = []
 
@@ -30,6 +29,7 @@ const timeout = require('./utils/timeoutPromise.js')
   })
 
   let targets = []
+  let outputArr =[]
 
   //put html links from xmlArr into targets array
   //xmlArrP is an array of promise
@@ -43,6 +43,7 @@ const timeout = require('./utils/timeoutPromise.js')
     $('url loc').each((i, el) => {
       const link = $(el).text()
       targets.push(link)
+      outputArr.push(link)
     })
   })
 
@@ -62,11 +63,11 @@ const timeout = require('./utils/timeoutPromise.js')
 
     // fetch array of target html
     const targetArrP = tempArr.map(async (url) => {
+      //get page and load into cheerio
       const result = await fetch(url).catch((err) => {
-        //Write any errors to csv and console.log, then move on
+        //   //Write any errors to csv then move on
         writeStream.write(`${err.message}\n`)
       })
-
       const data = await result.text()
       const $ = cheerio.load(data)
 
@@ -74,19 +75,20 @@ const timeout = require('./utils/timeoutPromise.js')
       $('.card a').each((i, el) => {
         const link = $(el).attr('href')
         secondTargets.push(link)
+        outputArr.push(link)
       })
       writeStream.write(`${url}, ${result.status}\n`)
     })
 
-    await Promise.all(targetArrP).catch((err) => console.log(err.message))
+    await Promise.all(targetArrP).catch((err) => console.log(`promise ${err.message}`))
 
     //wait 3 seconds for next chunk
-    timeout(3000)
+    await timeOut
   }
 
   //get second level html url
   // for (i = 0, j = secondTargets.length; i < j; i += chunk) {
-  for (i = 0, j = 100; i < j; i += chunk) {
+  for (i = 0, j = 50; i < j; i += chunk) {
     //slice doesn't change original array
     tempArr = secondTargets.slice(i, i + chunk)
 
@@ -100,13 +102,14 @@ const timeout = require('./utils/timeoutPromise.js')
       writeStream.write(`${url}, ${result.status}\n`)
     })
 
-    await Promise.all(secondTargetArrP).catch((err) => console.log(err.message))
+    await Promise.all(secondTargetArrP).catch((err) => console.log(`second promise ${err.message}`))
 
     //wait 3 seconds for next chunk
-    timeout(3000)
+    await timeOut
   }
 
   //at end of your code
   const results = perf.stop()
   console.log(results.time) // in milliseconds
-})()
+  return outputArr
+}
