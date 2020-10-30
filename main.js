@@ -64,6 +64,7 @@ const ObjectsToCsv = require('objects-to-csv')
 
     //main url
     obj['main_url'] = Arr[i]
+    obj['slug'] = Arr[i].replace('https://wallpapers.com/', '')
     obj['url_one'] = ArrOne[i]
 
     // title:
@@ -79,7 +80,6 @@ const ObjectsToCsv = require('objects-to-csv')
       : obj['Meta_description'] = 'false'
 
     //main image
-    // $('.img-responsive img-comic').attr("src")
     $('.post-image lozad').attr('src') == $1('.post-image lozad').attr('src') ? obj['main_img'] = 'true' : obj['main_img'] = 'false'
 
     toCSVArr.push(obj)
