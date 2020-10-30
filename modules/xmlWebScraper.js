@@ -2,7 +2,7 @@ const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 const perf = require('execution-time')()
 const timeOut = require('../utils/timeoutPromise.js')
-const getPage = require('./getPage.js')
+const getPage = require('./get$.js')
 
 module.exports = async function webScraper(url) {
   //at beginning of your code to calculate execution time

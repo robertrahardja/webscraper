@@ -1,9 +1,10 @@
 const xmlWebScraper = require('./modules/xmlWebScraper.js')
 const compareUrls = require('./modules/compareUrls.js')
-const fs = require('fs')
-const writeStream = fs.createWriteStream('sites.csv')
 const fetch = require('node-fetch')
 const xmlUrl = 'https://wallpapers.com/sitemap.xml'
+const timeOut = require('./utils/timeoutPromise.js')
+const get$ = require('./modules/get$')
+const ObjectsToCsv = require('objects-to-csv')
 
 ;(async () => {
   //get html array to compare
@@ -19,14 +20,12 @@ const xmlUrl = 'https://wallpapers.com/sitemap.xml'
     url.replace('wallpapers.com', 'wps01.pixel.ieplsg.com')
   )
 
-  
   Arr.sort()
   ArrOne.sort()
 
-  //   console.info(ArrOne)
-
-  chunk = 10
+  let toCSVArr = []
   //check status of ArrOne
+  chunk = 10
   //get second level html url
   // for (i = 0, j = ArrOne.length; i < j; i += chunk) {
   for (i = 0, j = 50; i < j; i += chunk) {
@@ -39,28 +38,57 @@ const xmlUrl = 'https://wallpapers.com/sitemap.xml'
         //Write any errors to csv and console.log, then move on
         console.log(`main ArrOne ${err.message}\n`)
       })
+      if (result.status != 200) {
+        // writeStream.write(`${url}, ${result.status}, ${err}\n`)
 
-      console.log(`${url}, ${result.status}\n`)
+        console.log(`${url}, ${result.status}, ${err}\n`)
+      }
+
+      console.log(`test ${url}, ${result.status}\n`)
     })
 
     await Promise.all(secondTargetArrP).catch((err) =>
-      console.log(`main: ArrOne url promise all failed: ${err.message}`)
+      console.log(`main: ArrOne url promise all failed: ${err}`)
     )
+    //wait 3 seconds for next chunk
+    await timeOut
   }
 
-    // //   console.info(Arr)
-    // let Arr2 = await webScraper(url).catch((err) => console.log(`main: second webscraper error ${err.message}`))
-    // Arr2.sort()
+  //Compare two arrays
+  for (var i = 0; i < 50; i++) {
+    $ = await get$(Arr[i])
+    $1 = await get$(ArrOne[i])
 
-    //compare arrays
-    // var arrayLength = Arr.length
-    //   for (var i = 0; i < arrayLength; i++) {
-    for (var i = 0; i < 50; i++) {
-      //for debugging
-      console.log(Arr[i])
-      console.log(ArrOne[i])
-      let output = await compareUrls(Arr[i], ArrOne[i]).catch((err) => console.log(`main: compareUrls error ${err.message}`))
-      
-      console.log(output)
-    }
+    console.log(Arr[i])
+    let obj = {}
+
+    //main url
+    obj['main_url'] = Arr[i]
+    obj['url_one'] = ArrOne[i]
+
+    // title:
+    $('title').text() == $1('title').text() ? obj['title'] = 'true' : obj['title'] = 'false'
+
+    // h1Text:
+    $('h1').text() == $1('h1').text() ? obj['H1_text'] = 'true' : obj['H1_text'] = 'false'
+
+    //Meta description
+    $('meta[name="description"]').attr('content') ==
+    $1('meta[name="description"]').attr('content')
+      ? obj['Meta_description'] = 'true'
+      : obj['Meta_description'] = 'false'
+
+    //main image
+    // $('.img-responsive img-comic').attr("src")
+    $('.post-image lozad').attr('src') == $1('.post-image lozad').attr('src') ? obj['main_img'] = 'true' : obj['main_img'] = 'false'
+
+    toCSVArr.push(obj)
+  }
+
+  const csv = new ObjectsToCsv(toCSVArr)
+
+  // Save to file:
+  await csv.toDisk('./result.csv')
+  // Return the CSV file as string:
+  console.log(await csv.toString())
 })()

@@ -1,8 +1,6 @@
 const arrPop = require('./arrayPop.js')
-const getPage = require('./getPage.js')
-const setArrayEquals = require('./arrayEquals.js')
-const fs = require('fs')
-const writeStream = fs.createWriteStream('sites.csv')
+const getPage = require('./get$.js')
+const setArrayEquals = require('./setArrayEquals.js')
 
 module.exports = async function compareUrls(url, url2) {
   // info from first website

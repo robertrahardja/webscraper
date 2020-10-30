@@ -8,3 +8,11 @@ Then we compare items stated in compareURLs.js
 
 wallpapers.com
 wps01.pixel.ieplsg.com/wallpapers/nier-automata-2b-ispp19vfr5evpjeb.html,
+
+end product 
+
+{
+
+    title: false
+    meta description: true
+}
