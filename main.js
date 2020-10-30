@@ -82,6 +82,9 @@ const ObjectsToCsv = require('objects-to-csv')
     //main image
     $('.post-image lozad').attr('src') == $1('.post-image lozad').attr('src') ? obj['main_img'] = 'true' : obj['main_img'] = 'false'
 
+    //main image alt
+    $('.post-image lozad').attr('alt') == $1('.post-image lozad').attr('alt') ? obj['main_img_alt'] = 'true' : obj['main_img_alt'] = 'false'
+
     toCSVArr.push(obj)
   }
 
