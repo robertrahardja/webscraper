@@ -2,21 +2,21 @@ const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 const perf = require('execution-time')()
 const timeOut = require('../utils/timeoutPromise.js')
-const getPage = require('./get$.js')
+const getPage = require('../modules/get$.js')
 
-module.exports = async function webScraper(url) {
+;(async () => {
   //at beginning of your code to calculate execution time
   perf.start()
+  const xmlUrl = 'https://wallpapers.com/sitemap.xml'
 
-  //get main url
-  $ = await getPage(url).catch((err) => {
+  //   get main url
+  $ = await getPage(xmlUrl).catch((err) => {
     //   //Write any errors to csv then move on
     console.log(`webScraper: getPage url one error: ${err.message}\n`)
   })
-
   const xmlArr = []
 
-  //get each link into xmlArr
+  //   get each link into xmlArr
   $('sitemap loc').each((i, el) => {
     const link = $(el).text()
     xmlArr.push(link)
@@ -31,7 +31,6 @@ module.exports = async function webScraper(url) {
     const result = await fetch(url).catch((err) =>
       console.log(`xmlWebScraper: xmlArrP fetch url error ${err.message}`)
     )
-    console.log(`${url}, ${result.status}\n`)
     const data = await result
       .text()
       .catch((err) =>
@@ -43,7 +42,6 @@ module.exports = async function webScraper(url) {
     $('url loc').each((i, el) => {
       const link = $(el).text()
       partialHTMLArr.push(link)
-      console.log(`${link}, ${result.status}\n`)
     })
 
     await timeOut
@@ -60,8 +58,8 @@ module.exports = async function webScraper(url) {
     j,
     tempArr,
     chunk = 10
-  for (i = 0, j = partialHTMLArr.length; i < j; i += chunk) {
-  // for (i = 0, j = 100; i < j; i += chunk) {
+  // for (i = 0, j = partialHTMLArr.length; i < j; i += chunk) {
+  for (i = 0, j = 100; i < j; i += chunk) {
     //slice doesn't change original array
     tempArr = partialHTMLArr.slice(i, i + chunk)
 
@@ -97,33 +95,30 @@ module.exports = async function webScraper(url) {
   }
 
   //get second level html url
-  for (i = 0, j = totalHTMLArr.length; i < j; i += chunk) {
-  // for (i = 0, j = 50; i < j; i += chunk) {
-    //slice doesn't change original array
-    tempArr = totalHTMLArr.slice(i, i + chunk)
+  // for (i = 0, j = totalHTMLArr.length; i < j; i += chunk) {
+    for (i = 0, j = 50; i < j; i += chunk) {
+        //slice doesn't change original array
+        tempArr = totalHTMLArr.slice(i, i + chunk)
+    
+        // fetch array of target html
+        const secondTargetArrP = tempArr.map(async (url) => {
+          const result = await fetch(url).catch((err) => {
+            //Write any errors to csv and console.log, then move on
+            console.log(`xmlWebScraper secondTargetArrp ${err.message}\n`)
+          })
+    
+          console.log(`${url}, ${result.status}\n`)
+        })
+    
+        await Promise.all(secondTargetArrP).catch((err) =>
+          console.log(
+            `webScraper: secondTargetArrP url promise all failed: ${err.message}`
+          )
+        )
+    
+        //wait 3 seconds for next chunk
+        await timeOut
+      }
 
-    // fetch array of target html
-    const secondTargetArrP = tempArr.map(async (url) => {
-      const result = await fetch(url).catch((err) => {
-        //Write any errors to csv and console.log, then move on
-        console.log(`xmlWebScraper secondTargetArrp ${err.message}\n`)
-      })
-
-      console.log(`${url}, ${result.status}\n`)
-    })
-
-    await Promise.all(secondTargetArrP).catch((err) =>
-      console.log(
-        `webScraper: secondTargetArrP url promise all failed: ${err.message}`
-      )
-    )
-
-    //wait 3 seconds for next chunk
-    await timeOut
-  }
-
-  //at end of your code
-  const results = perf.stop()
-  console.log(results.time) // in milliseconds
-  return totalHTMLArr //outputs array of htmls
-}
+  console.info(totalHTMLArr)
+})()

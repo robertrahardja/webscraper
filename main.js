@@ -12,7 +12,7 @@ const ObjectsToCsv = require('objects-to-csv')
     console.log(`main: first webscraper error ${err.message}`)
   )
 
-  //remove duplicates
+  console.log(`removing duplicates`)
   Arr = [...new Set(dupArr)]
 
   //get wps01 html array
@@ -25,6 +25,9 @@ const ObjectsToCsv = require('objects-to-csv')
 
   let toCSVArr = []
   //check status of ArrOne
+
+  let errArr = []
+
   chunk = 10
   //get second level html url
   // for (i = 0, j = ArrOne.length; i < j; i += chunk) {
@@ -37,10 +40,12 @@ const ObjectsToCsv = require('objects-to-csv')
       const result = await fetch(url).catch((err) => {
         //Write any errors to csv and console.log, then move on
         console.log(`main ArrOne ${err.message}\n`)
+        errArr.push(err)
       })
       if (result.status != 200) {
         // writeStream.write(`${url}, ${result.status}, ${err}\n`)
 
+        errArr.push(`${url}, ${result.status}, ${err}\n`)
         console.log(`${url}, ${result.status}, ${err}\n`)
       }
 
@@ -54,8 +59,14 @@ const ObjectsToCsv = require('objects-to-csv')
     await timeOut
   }
 
+  // Save to file:
+  const errCsv = new ObjectsToCsv(errArr)
+  await errCsv.toDisk('./errors.csv').catch((err) => {
+    ;`Error writting to error.csv`
+  })
+
   //Compare two arrays
-  for (var i = 0; i < 50; i++) {
+  for (var i = 0; i < Arr.length; i++) {
     $ = await get$(Arr[i])
     $1 = await get$(ArrOne[i])
 
@@ -64,26 +75,34 @@ const ObjectsToCsv = require('objects-to-csv')
 
     //main url
     obj['main_url'] = Arr[i]
-    obj['slug'] = Arr[i].replace('https://wallpapers.com/', '')
+    obj['slug'] = Arr[i].replace('https://wallpapers.com/wallpapers', '')
     obj['url_one'] = ArrOne[i]
 
     // title:
-    $('title').text() == $1('title').text() ? obj['title'] = 'true' : obj['title'] = 'false'
+    $('title').text() == $1('title').text()
+      ? (obj['title'] = 'true')
+      : (obj['title'] = 'false')
 
     // h1Text:
-    $('h1').text() == $1('h1').text() ? obj['H1_text'] = 'true' : obj['H1_text'] = 'false'
+    $('h1').text() == $1('h1').text()
+      ? (obj['H1_text'] = 'true')
+      : (obj['H1_text'] = 'false')
 
     //Meta description
     $('meta[name="description"]').attr('content') ==
     $1('meta[name="description"]').attr('content')
-      ? obj['Meta_description'] = 'true'
-      : obj['Meta_description'] = 'false'
+      ? (obj['Meta_description'] = 'true')
+      : (obj['Meta_description'] = 'false')
 
     //main image
-    $('.post-image lozad').attr('src') == $1('.post-image lozad').attr('src') ? obj['main_img'] = 'true' : obj['main_img'] = 'false'
+    $('.post-image lozad').attr('src') == $1('.post-image lozad').attr('src')
+      ? (obj['main_img'] = 'true')
+      : (obj['main_img'] = 'false')
 
     //main image alt
-    $('.post-image lozad').attr('alt') == $1('.post-image lozad').attr('alt') ? obj['main_img_alt'] = 'true' : obj['main_img_alt'] = 'false'
+    $('.post-image lozad').attr('alt') == $1('.post-image lozad').attr('alt')
+      ? (obj['main_img_alt'] = 'true')
+      : (obj['main_img_alt'] = 'false')
 
     toCSVArr.push(obj)
   }
@@ -91,7 +110,9 @@ const ObjectsToCsv = require('objects-to-csv')
   const csv = new ObjectsToCsv(toCSVArr)
 
   // Save to file:
-  await csv.toDisk('./result.csv')
+  await csv.toDisk('./result.csv').catch((err) => {
+    ;`Error writting to result.csv`
+  })
   // Return the CSV file as string:
   console.log(await csv.toString())
 })()
